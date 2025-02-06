@@ -45,7 +45,7 @@
         // Fetch and display clients
         async function updateClientsList() {
             try {
-                const response = await fetch('http://152.53.109.159:1111/api/clients');
+                const response = await fetch('http://localhost:1111/api/clients');
                 const clients = await response.json();
 
                 const clientsList = document.getElementById('clientsList');
@@ -93,7 +93,7 @@
             const target = document.getElementById('target').value;
 
             try {
-                const response = await fetch('http://152.53.109.159:1111/api/send-command', {
+                const response = await fetch('http://localhost:1111/api/send-command', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
