@@ -120,12 +120,22 @@ class DiagnosticServer:
             trace_output = ""
             if isinstance(json_result, list):
                 for hop in json_result:
-                    rtt = hop.get('rtt')
-                    if isinstance(rtt, (int, float)):  # Check if rtt is a number
-                        rounded_rtt = round(rtt)  # Round the RTT
-                        trace_output += f"{hop.get('hop', '')}. {hop.get('ip', '')} ({rounded_rtt}ms)\n"
-                    else:  # Handle cases where rtt is not a number (e.g., "*")
-                        trace_output += f"{hop.get('hop', '')}. {hop.get('ip', '')} ({rtt})\n" # Keep original value
+                    min_rtt = hop.get('min_rtt')
+                    avg_rtt = hop.get('avg_rtt')
+                    max_rtt = hop.get('max_rtt')
+                    ip = hop.get('ip', '')
+
+                    # Format RTTs, handling non-numeric values like "*"
+                    rtt_str = ""
+                    if all(isinstance(r, (int, float)) for r in [min_rtt, avg_rtt, max_rtt]): #All are numbers
+                        rtt_str = f"min/avg/max: {round(min_rtt)}/{round(avg_rtt)}/{round(max_rtt)} ms"
+                    elif any(isinstance(r, (int, float)) for r in [min_rtt, avg_rtt, max_rtt]): #Some are numbers
+                        rtt_str = f"min/avg/max: {min_rtt}/{avg_rtt}/{max_rtt} ms"
+                    else: #All are not numbers
+                        rtt_str = f"min/avg/max: {min_rtt}/{avg_rtt}/{max_rtt}" # Keep original value
+
+
+                    trace_output += f"{hop.get('hop', '')}. {ip} ({rtt_str})\n"
 
             else:
                 trace_output = str(json_result)  # Handle if json_result isn't a list
