@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оперативник</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/4.0.0-beta.9/plugin.min.js" integrity="sha512-Wo0mya+qYIZcWgG207NepO30JSltnbp67mseDyrYuL4Yi/ZqIfm5LuU3Ac30zYR2X5+5N2nyT4lsiPJvg2lk6g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8">Оперативник</h1>
+
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold mb-4">Подключенные клиенты</h2>
+            <div id="clientsList" class="space-y-4"></div>
+        </div>
+
+        <div id="commandForm" class="bg-white rounded-lg shadow p-6 hidden">
+            <h2 class="text-xl font-semibold mb-4">Отправить команду</h2>
+            <form id="diagnosticForm" class="space-y-4">
+                <input type="hidden" id="selectedClientId">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Команда</label>
+                    <select id="command" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="ping">Пинг</option>
+                        <option value="tracert">Трассировка</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Цель</label>
+                    <input type="text" id="target" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                           placeholder="e.g., google.com">
+                </div>
+
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Отправить команду
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Fetch and display clients
+        async function updateClientsList() {
+            try {
+                const response = await fetch('http://localhost:8080/api/clients');
+                const clients = await response.json();
+
+                const clientsList = document.getElementById('clientsList');
+                clientsList.innerHTML = '';
+
+                clients.forEach(client => {
+                    const clientElement = document.createElement('div');
+                    clientElement.className = 'border rounded p-4 hover:bg-gray-50 cursor-pointer';
+                    clientElement.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-semibold">${client.hostname}</div>
+                                <div class="text-sm text-gray-600">
+                                    Договор: ${client.agreement_id}  | Город: ${client.city}
+                                </div>
+                                <div class="text-sm text-gray-600">
+                                    ОС: ${client.os}
+                                </div>
+                            </div>
+                            <button class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
+                                    onclick="selectClient('${client.id}')">
+                                Отправить команду
+                            </button>
+                        </div>
+                    `;
+                    clientsList.appendChild(clientElement);
+                });
+            } catch (error) {
+                console.error('Error fetching clients:', error);
+            }
+        }
+
+        // Select client for sending command
+        function selectClient(clientId) {
+            document.getElementById('selectedClientId').value = clientId;
+            document.getElementById('commandForm').classList.remove('hidden');
+        }
+
+        // Handle form submission
+        document.getElementById('diagnosticForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const clientId = document.getElementById('selectedClientId').value;
+            const command = document.getElementById('command').value;
+            const target = document.getElementById('target').value;
+
+            try {
+                const response = await fetch('http://localhost:8080/api/send-command', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        client_id: clientId,
+                        command: command,
+                        target: target
+                    })
+                });
+
+                const result = await response.json();
+                alert(result.message);
+            } catch (error) {
+                console.error('Error sending command:', error);
+                alert('Error sending command');
+            }
+        });
+
+        // Update clients list periodically
+        updateClientsList();
+        setInterval(updateClientsList, 5000);
+    </script>
+</body>
+</html>
