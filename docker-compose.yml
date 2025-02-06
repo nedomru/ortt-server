@@ -1,0 +1,20 @@
+services:
+  ort:
+    image: "ort"
+    container_name: "ort-websocket-server"
+    stop_signal: SIGINT
+    build:
+      context: .
+    working_dir: "/usr/src/app/socket"
+    volumes:
+      - .:/usr/src/app/socket
+    command: python3 -m socket
+    restart: always
+    env_file:
+      - ".env"
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
