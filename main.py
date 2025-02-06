@@ -147,7 +147,7 @@ class DiagnosticServer:
                         max_length = 4000  # Leave some buffer
                         for i in range(0, len(encoded_message), max_length):
                             chunk = encoded_message[i:i + max_length]
-                            telegram_url = f'https://api.telegram.org/bot{os.getenv('BOT_TOKEN')}/sendMessage?chat_id=-4624389885&parse_mode=HTML&text={chunk}'
+                            telegram_url = f'https://api.telegram.org/bot{os.getenv('BOT_TOKEN')}/sendMessage?chat_id={os.getenv('TELEGRAM_GROUP_ID')}&message_thread_id={os.getenv('TELEGRAM_PING_CHAT_ID') if data['command'] == "ping" else os.getenv('TELEGRAM_TRACERT_CHAT_ID')}&parse_mode=HTML&text={chunk}'
                             response = requests.get(telegram_url)
                             if response.status_code != 200:
                                 logging.error(f"Telegram API Error: {response.status_code} - {response.text}")
