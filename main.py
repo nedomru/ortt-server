@@ -183,7 +183,7 @@ async def start_server():
 
     # Start both servers
     await site.start()
-    logging.info("HTTP server started on http://0.0.0.0:8080")
+    logging.info("HTTP server started on http://0.0.0.0:1111")
     logging.info("WebSocket server started on ws://0.0.0.0:8765")
 
     # Keep the server running
