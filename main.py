@@ -146,7 +146,8 @@ class DiagnosticServer:
                 f"<b>Договор:</b> <code>{data['agreement']}</code>\n",
                 f"<b>Ресурс:</b> {data['target']}\n\n",
                 "<b>Результат</b>\n",
-                f"<pre>{trace_output}</pre>\n",
+                f"<pre>Трассировка до ресурса {data['target']}\n"
+                f"{trace_output}</pre>\n",
                 f"<i>Время выполнения теста: {current_time}</i>"
             ]
         except Exception as e:
