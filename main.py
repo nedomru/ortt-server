@@ -2,16 +2,20 @@ import asyncio
 import websockets
 import json
 import logging
-import os
 from aiohttp import web
 import uuid
 import aiohttp_cors
-from dataclasses import dataclass, asdict
-from typing import Dict, Optional
+from dataclasses import dataclass
+from typing import Dict
 import datetime
 import pytz
 import requests
 from urllib.parse import quote_plus  # For URL encoding
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 
 # Configure logging
@@ -29,6 +33,63 @@ class Client:
     hostname: str
     websocket: websockets.WebSocketServerProtocol
     last_seen: datetime.datetime
+
+
+def format_tracert_message(data, json_result, current_time):
+    try:
+        trace_output = ""
+        if isinstance(json_result, list):
+            for hop in json_result:
+                min_rtt = hop.get('min_rtt')
+                avg_rtt = hop.get('avg_rtt')
+                max_rtt = hop.get('max_rtt')
+                ip = hop.get('ip', '')
+
+                # Format RTTs, handling non-numeric values like "*"
+                rtt_str = ""
+                if all(isinstance(r, (int, float)) for r in [min_rtt, avg_rtt, max_rtt]): #All are numbers
+                    rtt_str = f"{round(min_rtt)}мс / {round(avg_rtt)}мс / {round(max_rtt)}мс"
+                elif any(isinstance(r, (int, float)) for r in [min_rtt, avg_rtt, max_rtt]): #Some are numbers
+                    rtt_str = f"{min_rtt}мс / {avg_rtt}мс / {max_rtt}мс"
+                else: #All are not numbers
+                    rtt_str = f"{min_rtt} / {avg_rtt} / {max_rtt}" # Keep original value
+
+
+                trace_output += f"{hop.get('hop', '')}. {ip} ({rtt_str})\n"
+
+        else:
+            trace_output = str(json_result)  # Handle if json_result isn't a list
+
+        return [
+            "<b>⚡ Трассировка завершена</b>\n\n",
+            f"<b>Город:</b> {data['city']}\n",
+            f"<b>Договор:</b> <code>{data['agreement']}</code>\n",
+            f"<b>Ресурс:</b> {data['target']}\n\n",
+            "<b>Результат</b>\n",
+            f"<pre>Трассировка до ресурса {data['target']}\n"
+            f"{trace_output}</pre>\n",
+            f"<i>Время выполнения теста: {current_time}</i>"
+        ]
+    except Exception as e:
+        logging.error(f"Error formatting tracert message: {e}")
+        return ["<b>⚡ Error formatting tracert results</b>", str(e)]
+
+
+def format_ping_message(data, json_result, current_time):
+    try:
+        return [  # Always return a list
+            "<b>⚡ Пинг завершен</b>\n\n",
+            f"<b>Город:</b> {data['city']}\n",
+            f"<b>Договор:</b> <code>{data['agreement']}</code>\n",
+            f"<b>Ресурс:</b> {data['target']}\n\n",
+            "<b>Результат</b>\n",
+            f"Отклик: {json_result['min_rtt']}мс / {json_result['avg_rtt']}мс / {json_result['max_rtt']}мс\n",
+            f"Потери: {json_result['packet_loss']}%\n\n",
+            f"<i>Время выполнения теста: {current_time}</i>"
+        ]
+    except Exception as e:  # Handle any exceptions
+        logging.error(f"Error formatting ping message: {e}")
+        return ["<b>⚡ Error formatting ping results</b>", str(e)] # Return a list with error message
 
 
 class DiagnosticServer:
@@ -73,9 +134,9 @@ class DiagnosticServer:
                         message_parts = ["<b>⚡ Неизвестный результат</b>"]
 
                         if data['command'] == "ping":
-                            message_parts = self.format_ping_message(data, json_result, current_time)
+                            message_parts = format_ping_message(data, json_result, current_time)
                         elif data['command'] == "tracert":
-                            message_parts = self.format_tracert_message(data, json_result, current_time)
+                            message_parts = format_tracert_message(data, json_result, current_time)
                             
                         send_message = "".join(message_parts)
 
@@ -86,7 +147,7 @@ class DiagnosticServer:
                         max_length = 4000  # Leave some buffer
                         for i in range(0, len(encoded_message), max_length):
                             chunk = encoded_message[i:i + max_length]
-                            telegram_url = f'https://api.telegram.org/bot7486482278:AAFrm6uf7lrRcLz03OpFyxO8j6VwO7qjyT8/sendMessage?chat_id=-4624389885&parse_mode=HTML&text={chunk}'
+                            telegram_url = f'https://api.telegram.org/bot{os.getenv('BOT_TOKEN')}/sendMessage?chat_id=-4624389885&parse_mode=HTML&text={chunk}'
                             response = requests.get(telegram_url)
                             if response.status_code != 200:
                                 logging.error(f"Telegram API Error: {response.status_code} - {response.text}")
@@ -99,61 +160,6 @@ class DiagnosticServer:
         finally:
             await self.unregister_client(websocket)
 
-    def format_ping_message(self, data, json_result, current_time):
-        try:
-            return [  # Always return a list
-                "<b>⚡ Пинг завершен</b>\n\n",
-                f"<b>Город:</b> {data['city']}\n",
-                f"<b>Договор:</b> <code>{data['agreement']}</code>\n",
-                f"<b>Ресурс:</b> {data['target']}\n\n",
-                "<b>Результат</b>\n",
-                f"Отклик: {json_result['min_rtt']}мс / {json_result['avg_rtt']}мс / {json_result['max_rtt']}мс\n",
-                f"Потери: {json_result['packet_loss']}%\n\n",
-                f"<i>Время выполнения теста: {current_time}</i>"
-            ]
-        except Exception as e:  # Handle any exceptions
-            logging.error(f"Error formatting ping message: {e}")
-            return ["<b>⚡ Error formatting ping results</b>", str(e)] # Return a list with error message
-
-    def format_tracert_message(self, data, json_result, current_time):
-        try:
-            trace_output = ""
-            if isinstance(json_result, list):
-                for hop in json_result:
-                    min_rtt = hop.get('min_rtt')
-                    avg_rtt = hop.get('avg_rtt')
-                    max_rtt = hop.get('max_rtt')
-                    ip = hop.get('ip', '')
-
-                    # Format RTTs, handling non-numeric values like "*"
-                    rtt_str = ""
-                    if all(isinstance(r, (int, float)) for r in [min_rtt, avg_rtt, max_rtt]): #All are numbers
-                        rtt_str = f"{round(min_rtt)}мс / {round(avg_rtt)}мс / {round(max_rtt)}мс"
-                    elif any(isinstance(r, (int, float)) for r in [min_rtt, avg_rtt, max_rtt]): #Some are numbers
-                        rtt_str = f"{min_rtt}мс / {avg_rtt}мс / {max_rtt}мс"
-                    else: #All are not numbers
-                        rtt_str = f"{min_rtt} / {avg_rtt} / {max_rtt}" # Keep original value
-
-
-                    trace_output += f"{hop.get('hop', '')}. {ip} ({rtt_str})\n"
-
-            else:
-                trace_output = str(json_result)  # Handle if json_result isn't a list
-
-            return [
-                "<b>⚡ Трассировка завершена</b>\n\n",
-                f"<b>Город:</b> {data['city']}\n",
-                f"<b>Договор:</b> <code>{data['agreement']}</code>\n",
-                f"<b>Ресурс:</b> {data['target']}\n\n",
-                "<b>Результат</b>\n",
-                f"<pre>Трассировка до ресурса {data['target']}\n"
-                f"{trace_output}</pre>\n",
-                f"<i>Время выполнения теста: {current_time}</i>"
-            ]
-        except Exception as e:
-            logging.error(f"Error formatting tracert message: {e}")
-            return ["<b>⚡ Error formatting tracert results</b>", str(e)]
-    
     async def send_command(self, client_id: uuid.UUID, command: str, target: str):
         """Send a diagnostic command to a specific client"""
         if client_id in self.clients:
@@ -270,19 +276,19 @@ async def start_server():
     # Create WebSocket server
     ws_server = await websockets.serve(
         lambda websocket: server.handle_websocket(websocket),
-        '0.0.0.0',
-        8765
+        os.getenv('HOST'),
+        os.getenv('WEBSOCKET_PORT')
     )
 
     # Start HTTP server
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, '0.0.0.0', 1111)
+    site = web.TCPSite(runner, os.getenv('HOST'), os.getenv('WEB_PORT'))
 
     # Start both servers
     await site.start()
-    logging.info("HTTP server started on http://0.0.0.0:1111")
-    logging.info("WebSocket server started on ws://0.0.0.0:8765")
+    logging.info(f"HTTP server started on {os.getenv('HOST')}:{os.getenv('WEB_PORT')}")
+    logging.info(f"WebSocket server started on ws://{os.getenv('HOST')}:{os.getenv('WEBSOCKET_PORT')}")
 
     # Keep the server running
     await asyncio.Future()  # run forever
