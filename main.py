@@ -128,7 +128,7 @@ class DiagnosticServer:
 
             ready_message = f"""<b>❌ Клиент отключился</b>
 
-ID: {websocket.id}
+ID: <code>{websocket.id}</code>
 
 <i>Время: {current_time}</i>"""
             await send_log(category="connect", message=ready_message)
@@ -186,7 +186,7 @@ ID: {websocket.id}
                 logging.info(f"Sent {command} command to {client.hostname}")
                 ready_message = f"""<b>🟢 Новый запрос</b>
 
-ID: {client_id}
+ID: <code>{client_id}</code>
 Команда: {command}
 Ресурс: {target}
 
