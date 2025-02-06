@@ -172,19 +172,19 @@ async def start_server():
     # Create WebSocket server
     ws_server = await websockets.serve(
         lambda websocket: server.handle_websocket(websocket),
-        'localhost',
+        '0.0.0.0',
         8765
     )
 
     # Start HTTP server
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, 'localhost', 8080)
+    site = web.TCPSite(runner, '0.0.0.0', 1111)
 
     # Start both servers
     await site.start()
-    logging.info("HTTP server started on http://localhost:8080")
-    logging.info("WebSocket server started on ws://localhost:8765")
+    logging.info("HTTP server started on http://0.0.0.0:8080")
+    logging.info("WebSocket server started on ws://0.0.0.0:8765")
 
     # Keep the server running
     await asyncio.Future()  # run forever
