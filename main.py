@@ -104,7 +104,7 @@ class DiagnosticServer:
             return [  # Always return a list
                 "<b>⚡ Пинг завершен</b>\n\n",
                 f"<b>Город:</b> {data['city']}\n",
-                f"<b>Договор:</b> {data['agreement']}\n",
+                f"<b>Договор:</b> <code>{data['agreement']}</code>\n",
                 f"<b>Ресурс:</b> {data['target']}\n\n",
                 "<b>Результат</b>\n",
                 f"Отклик: {json_result['min_rtt']}мс / {json_result['avg_rtt']}мс / {json_result['max_rtt']}мс\n",
@@ -128,11 +128,11 @@ class DiagnosticServer:
                     # Format RTTs, handling non-numeric values like "*"
                     rtt_str = ""
                     if all(isinstance(r, (int, float)) for r in [min_rtt, avg_rtt, max_rtt]): #All are numbers
-                        rtt_str = f"min/avg/max: {round(min_rtt)}/{round(avg_rtt)}/{round(max_rtt)} ms"
+                        rtt_str = f"{round(min_rtt)}мс / {round(avg_rtt)}мс / {round(max_rtt)}мс"
                     elif any(isinstance(r, (int, float)) for r in [min_rtt, avg_rtt, max_rtt]): #Some are numbers
-                        rtt_str = f"min/avg/max: {min_rtt}/{avg_rtt}/{max_rtt} ms"
+                        rtt_str = f"{min_rtt}мс / {avg_rtt}мс / {max_rtt}мс"
                     else: #All are not numbers
-                        rtt_str = f"min/avg/max: {min_rtt}/{avg_rtt}/{max_rtt}" # Keep original value
+                        rtt_str = f"{min_rtt} / {avg_rtt} / {max_rtt}" # Keep original value
 
 
                     trace_output += f"{hop.get('hop', '')}. {ip} ({rtt_str})\n"
@@ -143,7 +143,7 @@ class DiagnosticServer:
             return [
                 "<b>⚡ Трассировка завершена</b>\n\n",
                 f"<b>Город:</b> {data['city']}\n",
-                f"<b>Договор:</b> {data['agreement']}\n",
+                f"<b>Договор:</b> <code>{data['agreement']}</code>\n",
                 f"<b>Ресурс:</b> {data['target']}\n\n",
                 "<b>Результат</b>\n",
                 f"<pre>{trace_output}</pre>\n",
