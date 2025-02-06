@@ -2,3 +2,5 @@ websockets
 aiohttp
 aiohttp_cors
 requests
+python-dotenv
+pytz
