@@ -1,9 +1,7 @@
-FROM python:3.11-slim
+FROM python:3.12
 
-WORKDIR /usr/src/app/socket
+WORKDIR /app
+COPY ./requirements.txt /app
 
-COPY requirements.txt /usr/src/app/socket
-
-RUN pip install -r /usr/src/app/socket/requirements.txt
-
-COPY . /usr/src/app/socket
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt

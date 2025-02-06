@@ -1,20 +1,13 @@
 services:
-  ort:
-    image: "ort"
-    container_name: "ort-websocket-server"
-    stop_signal: SIGINT
+  web:
+    container_name: ort-server
+    command: python main.py
     build:
       context: .
-    working_dir: "/usr/src/app/socket"
+      dockerfile: Dockerfile
     volumes:
-      - .:/usr/src/app/socket
-    command: python3 -m socket
-    restart: always
-    env_file:
-      - ".env"
-
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "200k"
-        max-file: "10"
+      - ./:/app
+    ports:
+      - "1111:1111"
+      - "8765:8765"
+    restart: unless-stopped
