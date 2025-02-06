@@ -41,13 +41,13 @@ class DiagnosticServer:
             last_seen=datetime.datetime.now()
         )
         self.clients[websocket.id] = client
-        logging.info(f"New client registered: {client.hostname} from {client.city}")
+        logging.info(f"New client registered: agr = {client.agreement_id}, city = {client.city}")
 
     async def unregister_client(self, websocket: websockets.WebSocketServerProtocol):
         """Remove a client when they disconnect"""
         if websocket.id in self.clients:
             client = self.clients.pop(websocket.id)
-            logging.info(f"Client disconnected: {client.hostname}")
+            logging.info(f"Client disconnected: agr = {client.agreement_id}, city = {client.city}")
 
     async def handle_websocket(self, websocket: websockets.WebSocketServerProtocol):
         """Handle WebSocket connections"""
