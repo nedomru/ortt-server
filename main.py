@@ -2,6 +2,7 @@ import asyncio
 import websockets
 import json
 import logging
+import os
 from aiohttp import web
 import uuid
 import aiohttp_cors
@@ -164,6 +165,18 @@ async def start_server():
     # Add routes
     app.router.add_get('/api/clients', handle_get_clients)
     app.router.add_post('/api/send-command', handle_send_command)
+
+    async def index_handler(request):
+        try:
+            # Get the directory where the script is running
+            current_directory = os.path.dirname(os.path.abspath(__file__))
+            file_path = os.path.join(current_directory, 'index.html')
+            return web.FileResponse(file_path)
+        except FileNotFoundError:
+            return web.Response(status=404, text="File not found")
+
+    app.router.add_get('/', index_handler)  # Serve index.html at the root path
+    app.router.add_get('/index.html', index_handler)  # Serve index.html at /index.html too (optional)
 
     # Apply CORS to routes
     for route in list(app.router.routes()):
