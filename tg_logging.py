@@ -16,7 +16,7 @@ async def send_log(category: str, message: str):
         case "tracert":
             topic = os.getenv('TELEGRAM_TRACERT_CHAT_ID')
         case "request":
-            topic = os.getenv('TELEGRAM_REQUEST_CHAT_ID')
+            topic = os.getenv('TELEGRAM_REQUESTS_CHAT_ID')
         case "connect":
             topic = os.getenv('TELEGRAM_CONNECTS_CHAT_ID')
 
