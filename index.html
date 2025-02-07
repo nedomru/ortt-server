@@ -4,118 +4,229 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Оперативник</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/4.0.0-beta.9/plugin.min.js" integrity="sha512-Wo0mya+qYIZcWgG207NepO30JSltnbp67mseDyrYuL4Yi/ZqIfm5LuU3Ac30zYR2X5+5N2nyT4lsiPJvg2lk6g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100 p-8">
-    <div class="max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold mb-8">Оперативник</h1>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-gray-800">Оперативник</h1>
+                <div class="flex space-x-4">
+                    <button id="sendCommandBtn" disabled
+                            class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Отправить команду клиентам (<span id="selectedCount">0</span>)
+                    </button>
+                </div>
+            </div>
+        </header>
 
-        <div class="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4">Подключенные клиенты</h2>
-            <div id="clientsList" class="space-y-4"></div>
-        </div>
-
-        <div id="commandForm" class="bg-white rounded-lg shadow p-6 hidden">
-            <h2 class="text-xl font-semibold mb-4">Отправить команду</h2>
-            <form id="diagnosticForm" class="space-y-4">
-                <input type="hidden" id="selectedClientId">
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Команда</label>
-                    <select id="command" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        <option value="ping">Пинг</option>
-                        <option value="tracert">Трассировка</option>
+        <!-- Filters -->
+        <div class="bg-white rounded-lg shadow mb-6 p-4">
+            <div class="flex items-center space-x-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Фильтр по городам</label>
+                    <select id="cityFilter" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Все города</option>
                     </select>
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Цель</label>
-                    <input type="text" id="target" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
-                           placeholder="e.g., google.com">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Поиск по договору</label>
+                    <input type="text" id="agreementSearch" 
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                           placeholder="Введи номер договора">
                 </div>
+            </div>
+        </div>
 
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                    Отправить команду
-                </button>
-            </form>
+        <!-- Clients List -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-800">Подключенные клиенты</h2>
+            </div>
+            <div id="clientsList" class="divide-y divide-gray-200"></div>
+        </div>
+
+        <!-- Command Modal -->
+        <div id="commandModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+            <div class="flex items-center justify-center min-h-screen p-4">
+                <div class="bg-white rounded-lg shadow-xl max-w-lg w-full">
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-semibold text-gray-800">Отправить команду</h3>
+                            <button onclick="closeCommandModal()" class="text-gray-400 hover:text-gray-500">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <form id="diagnosticForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Команда</label>
+                                <select id="command" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="ping">Пинг</option>
+                                    <option value="tracert">Трассировка</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Ресурс</label>
+                                <input type="text" id="target" 
+                                       class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                       placeholder="например google.com">
+                            </div>
+
+                            <div class="flex justify-end space-x-3 mt-6">
+                                <button type="button" onclick="closeCommandModal()"
+                                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                                    Отменить
+                                </button>
+                                <button type="submit"
+                                        class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                                    Отправить команду
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Fetch and display clients
-        async function updateClientsList() {
-            try {
-                const response = await fetch('http://152.53.109.159:1111/api/clients');
-                const clients = await response.json();
+        let selectedClients = new Set();
+        let allClients = [];
 
-                const clientsList = document.getElementById('clientsList');
-                clientsList.innerHTML = '';
+        function updateSendCommandButton() {
+            const btn = document.getElementById('sendCommandBtn');
+            const count = document.getElementById('selectedCount');
+            count.textContent = selectedClients.size;
+            btn.disabled = selectedClients.size === 0;
+        }
 
-                clients.forEach(client => {
-                    const clientElement = document.createElement('div');
-                    clientElement.className = 'border rounded p-4 hover:bg-gray-50 cursor-pointer';
-                    clientElement.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <div class="font-semibold">${client.hostname}</div>
-                                <div class="text-sm text-gray-600">
-                                    Договор: ${client.agreement_id}  | Город: ${client.city}
-                                </div>
-                                <div class="text-sm text-gray-600">
-                                    ОС: ${client.os}
-                                </div>
-                            </div>
-                            <button class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600"
-                                    onclick="selectClient('${client.id}')">
-                                Отправить команду
-                            </button>
-                        </div>
-                    `;
-                    clientsList.appendChild(clientElement);
-                });
-            } catch (error) {
-                console.error('Error fetching clients:', error);
+        function openCommandModal() {
+            document.getElementById('commandModal').classList.remove('hidden');
+        }
+
+        function closeCommandModal() {
+            document.getElementById('commandModal').classList.add('hidden');
+        }
+
+        document.getElementById('sendCommandBtn').addEventListener('click', openCommandModal);
+
+        function toggleClientSelection(clientId) {
+            const checkbox = document.getElementById(`checkbox-${clientId}`);
+            if (checkbox.checked) {
+                selectedClients.add(clientId);
+            } else {
+                selectedClients.delete(clientId);
             }
+            updateSendCommandButton();
         }
 
-        // Select client for sending command
-        function selectClient(clientId) {
-            document.getElementById('selectedClientId').value = clientId;
-            document.getElementById('commandForm').classList.remove('hidden');
+        function updateClientsList(clients) {
+            const clientsList = document.getElementById('clientsList');
+            clientsList.innerHTML = '';
+
+            clients.forEach(client => {
+                const clientElement = document.createElement('div');
+                clientElement.className = 'p-4 hover:bg-gray-50';
+                clientElement.innerHTML = `
+                    <div class="flex items-center space-x-4">
+                        <input type="checkbox" id="checkbox-${client.id}"
+                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                               ${selectedClients.has(client.id) ? 'checked' : ''}
+                               onchange="toggleClientSelection('${client.id}')">
+                        <div class="flex-1">
+                            <div class="flex items-baseline">
+                                <span class="text-lg font-semibold text-blue-600 mr-2">Договор: ${client.agreement_id}</span>
+                                <span class="text-sm text-gray-500">${client.hostname}</span>
+                            </div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                <span class="mr-4"><i class="fas fa-map-marker-alt"></i> ${client.city}</span>
+                                <span><i class="fas fa-desktop"></i> ${client.os}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                clientsList.appendChild(clientElement);
+            });
         }
 
-        // Handle form submission
+        function updateCityFilter(clients) {
+            const cityFilter = document.getElementById('cityFilter');
+            const cities = [...new Set(clients.map(client => client.city))].sort();
+            
+            cityFilter.innerHTML = '<option value="">Все города</option>';
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                cityFilter.appendChild(option);
+            });
+        }
+
+        function filterClients() {
+            const cityFilter = document.getElementById('cityFilter').value;
+            const agreementSearch = document.getElementById('agreementSearch').value.toLowerCase();
+
+            const filteredClients = allClients.filter(client => {
+                const matchesCity = !cityFilter || client.city === cityFilter;
+                const matchesAgreement = !agreementSearch || 
+                    client.agreement_id.toLowerCase().includes(agreementSearch);
+                return matchesCity && matchesAgreement;
+            });
+
+            updateClientsList(filteredClients);
+        }
+
+        document.getElementById('cityFilter').addEventListener('change', filterClients);
+        document.getElementById('agreementSearch').addEventListener('input', filterClients);
+
         document.getElementById('diagnosticForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const clientId = document.getElementById('selectedClientId').value;
             const command = document.getElementById('command').value;
             const target = document.getElementById('target').value;
 
             try {
-                const response = await fetch('http://152.53.109.159:1111/api/send-command', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        client_id: clientId,
-                        command: command,
-                        target: target
+                const promises = Array.from(selectedClients).map(clientId => 
+                    fetch('http://152.53.109.159:1111/api/send-command', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            client_id: clientId,
+                            command: command,
+                            target: target
+                        })
                     })
-                });
+                );
 
-                const result = await response.json();
-                alert(result.message);
+                const results = await Promise.all(promises);
+                const responses = await Promise.all(results.map(r => r.json()));
+                
+                closeCommandModal();
+                alert('Команды успешно отправлены');
             } catch (error) {
-                console.error('Error sending command:', error);
-                alert('Error sending command');
+                console.error('Ошибка отправки команд:', error);
+                alert('Ошибка отправки команд');
             }
         });
 
-        // Update clients list periodically
-        updateClientsList();
-        setInterval(updateClientsList, 5000);
+        async function fetchAndUpdateClients() {
+            try {
+                const response = await fetch('http://152.53.109.159:1111/api/clients');
+                allClients = await response.json();
+                updateCityFilter(allClients);
+                filterClients();
+            } catch (error) {
+                console.error('Ошибка получения клиентов:', error);
+            }
+        }
+
+        fetchAndUpdateClients();
+        setInterval(fetchAndUpdateClients, 5000);
     </script>
 </body>
 </html>
