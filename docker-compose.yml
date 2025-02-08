@@ -1,6 +1,6 @@
 services:
   web:
-    container_name: ort-server
+    container_name: ortt-server
     command: python main.py
     build:
       context: .
