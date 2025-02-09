@@ -190,7 +190,7 @@
 
             try {
                 const promises = Array.from(selectedClients).map(clientId => 
-                    fetch('http://0.0.0.0:1111/api/send-command', {
+                    fetch('https://ortt.chrsnv.ru/api/send-command', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -216,7 +216,7 @@
 
         async function fetchAndUpdateClients() {
             try {
-                const response = await fetch('http://0.0.0.0:1111/api/clients');
+                const response = await fetch('https://ortt.chrsnv.ru/api/clients');
                 allClients = await response.json();
                 updateCityFilter(allClients);
                 filterClients();
