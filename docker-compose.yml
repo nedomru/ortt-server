@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+      - "8765:8765"
     volumes:
       - ./:/app
     restart: unless-stopped
