@@ -256,13 +256,7 @@ async def handle_send_command(request):
                 status=400
             )
 
-        send_command = ""
-        match command:
-            case "ping":
-                send_command = "ping -n 30 -l 1200"
-            case "tracert": 
-                send_command = "tracert /d /4"
-        result = await request.app['server'].send_command(client_id, send_command, target)
+        result = await request.app['server'].send_command(client_id, command, target)
         return web.json_response(result)
     except Exception as e:
         return web.json_response(
